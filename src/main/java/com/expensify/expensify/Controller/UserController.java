@@ -5,6 +5,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,11 +14,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expensify.expensify.dto.JWTResponseDTO;
 import com.expensify.expensify.dto.UserDTO;
+import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.split.Split;
 import com.expensify.expensify.service.UserService;
+import com.expensify.expensify.utility.JWTUtility;
 
 @RestController
 @RequestMapping("/user")
@@ -26,17 +30,45 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	JWTUtility jwtUtility;
+
 	@PostMapping("/register")
-	public User registerUser(@RequestBody @Valid UserDTO userModel) {
-		userModel.setUserName(userModel.getUserFirstName() + " " + userModel.getUserLastName());
+	public JWTResponseDTO registerUser(@RequestBody @Valid UserDTO userModel) {
 		User user = userService.createUser(userModel);
 
-		return user;
+		final String token = jwtUtility.generateToken(user);
+
+		return new JWTResponseDTO(token, userService.UserToUserDTO(user));
+	}
+
+	@PostMapping("/login")
+	public JWTResponseDTO loginUser(@RequestBody @Valid UserLoginDTO userLoginDTO) throws Exception {
+		User user = userService.userLogin(userLoginDTO);
+
+		System.out.println(user);
+		if (user == null) {
+			throw new Exception("INVALID_CREDENTIALS");
+		}
+
+		final String token = jwtUtility.generateToken(user);
+
+		return new JWTResponseDTO(token, userService.UserToUserDTO(user));
 	}
 
 	@GetMapping("/{id}")
 	public User getUserById(@PathVariable("id") Long userId) {
 		return userService.getUserById(userId);
+	}
+
+	@GetMapping("/current")
+	public User getCurrentUser(@AuthenticationPrincipal User user) {
+		return user;
+	}
+
+	@GetMapping("/name/{name}")
+	public User getUserByName(@PathVariable("name") String name) {
+		return userService.loadUserByUserName(name);
 	}
 
 	@GetMapping("/all")

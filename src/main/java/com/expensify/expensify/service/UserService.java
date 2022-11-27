@@ -1,26 +1,31 @@
 package com.expensify.expensify.service;
 
-import com.expensify.expensify.entity.expense.Expense;
+import java.util.List;
+
 import com.expensify.expensify.dto.UserDTO;
+import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.split.Split;
 
-import java.util.List;
-
 public interface UserService {
+	User UserDTOTOUser(UserDTO userDTO);
 
-    User createUser(UserDTO userModel);
+	UserDTO UserToUserDTO(User user);
 
-    User getUserById(Long userId);
+	User createUser(UserDTO userModel);
 
-    List<Group> getUserGroups(Long userId);
+	User getUserById(Long userId);
 
-    List<Split> getUserExpenses(Long userId);
+	List<Group> getUserGroups(Long userId);
 
-    List<User> getAllUsers();
+	List<Split> getUserExpenses(Long userId);
 
-    String deleteUser(Long userId);
+	List<User> getAllUsers();
 
-    User loadUserByUserName(String userName);
+	String deleteUser(Long userId);
+
+	User userLogin(UserLoginDTO userLogin);
+
+	User loadUserByUserName(String userName);
 }
