@@ -5,9 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ExpenseDataDTO {
-
-	private String description;
+@NoArgsConstructor
+public class SettleUPDTPO {
+	private Long fromUserId;
+	private Long toUserID;
+	private double amount;
 }

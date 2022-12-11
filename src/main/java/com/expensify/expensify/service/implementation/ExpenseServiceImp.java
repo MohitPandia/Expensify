@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.expensify.expensify.dto.ExpenseDTO;
 import com.expensify.expensify.dto.ExpenseDataDTO;
 import com.expensify.expensify.dto.SplitDTO;
+import com.expensify.expensify.entity.ExpenseStatus;
 import com.expensify.expensify.entity.ExpenseType;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.expense.EqualExpense;
@@ -16,9 +18,11 @@ import com.expensify.expensify.entity.expense.ExactExpense;
 import com.expensify.expensify.entity.expense.Expense;
 import com.expensify.expensify.entity.expense.ExpenseData;
 import com.expensify.expensify.entity.expense.PercentageExpense;
+import com.expensify.expensify.entity.expense.SettleUpExpense;
 import com.expensify.expensify.entity.split.PercentSplit;
 import com.expensify.expensify.entity.split.Split;
 import com.expensify.expensify.repository.Expense.ExpenseRepository;
+import com.expensify.expensify.service.DueAmountService;
 import com.expensify.expensify.service.ExpenseService;
 import com.expensify.expensify.service.GroupService;
 import com.expensify.expensify.service.SplitService;
@@ -39,29 +43,38 @@ public class ExpenseServiceImp implements ExpenseService {
 	@Autowired
 	GroupService groupService;
 
+	@Autowired
+	DueAmountService dueAmountService;
+
 	public ExpenseData ExpenseDataDTOToExpenseData(ExpenseDataDTO expenseDataDTO) {
 		ExpenseData expenseData = new ExpenseData();
 
-		expenseData.setName(expenseDataDTO.getName());
+		expenseData.setDescription(expenseDataDTO.getDescription());
 
 		return expenseData;
+	}
+
+	public ExpenseDataDTO expenseDataToExpenseDataDTO(ExpenseData expenseData) {
+		ExpenseDataDTO expenseDataDTO = new ExpenseDataDTO();
+
+		expenseDataDTO.setDescription(expenseData.getDescription());
+
+		return expenseDataDTO;
+
 	}
 
 	public Expense ExpenseDTOToExpense(ExpenseDTO expenseDTO) {
 
 		ExpenseType expenseType = ExpenseType.valueOf(expenseDTO.getExpType());
-
 		List<Split> splits = new ArrayList<>(expenseDTO.getUsrSplitBtw().size());
-
 		for (SplitDTO splitdto : expenseDTO.getUsrSplitBtw()) {
 			Split split = splitService.createSplit(splitdto, expenseType);
 			splits.add(split);
 		}
-
 		Expense expense = this.createExpense(expenseType, expenseDTO, splits);
-
 		expense.setAmount(expenseDTO.getExpAmt());
-
+		expense.setExpenseType(expenseType);
+		expense.setExpenseName(expenseDTO.getExpName());
 		expense.setExpGroup(groupService.getGroupById(expenseDTO.getExpGrp()));
 		for (Split split : expense.getSplits()) {
 			split.setExpense(expense);
@@ -69,20 +82,7 @@ public class ExpenseServiceImp implements ExpenseService {
 		return expense;
 	}
 
-	@Override
-	public Expense createExpense(ExpenseDTO expenseDTO) {
-
-		Expense expense = this.ExpenseDTOToExpense(expenseDTO);
-
-		if (expense.validate()) {
-			expenseRepository.save(expense);
-		} else {
-			return null;
-		}
-		return expense;
-	}
-
-	@Override
+//	@Override
 	public Expense createExpense(ExpenseType expenseType, ExpenseDTO expenseDTO, List<Split> splits) {
 		double amount = expenseDTO.getExpAmt();
 		User expensePaidBy = userService.getUserById(expenseDTO.getExpPaidBy());
@@ -96,19 +96,121 @@ public class ExpenseServiceImp implements ExpenseService {
 				PercentSplit percentSplit = (PercentSplit) split;
 				split.setAmount((amount * percentSplit.getPercent()) / 100.0);
 			}
-			PercentageExpense pex = new PercentageExpense(amount, expensePaidBy, splits, expenseData);
-			return pex;
+			PercentageExpense percentageExpense = new PercentageExpense(amount, expensePaidBy, splits, expenseData);
+			return percentageExpense;
 		case EQUAL:
 			int totalSplits = splits.size();
-			double splitAmount = ((double) Math.round(amount * 100 / totalSplits) / 100.0);
+			double splitAmount = (Math.round(amount * 100 / totalSplits) / 100.0);
 			for (Split split : splits) {
 				split.setAmount(splitAmount);
 			}
-			EqualExpense eex = new EqualExpense(amount, expensePaidBy, splits, expenseData);
-			return eex;
+			EqualExpense equalExpense = new EqualExpense(amount, expensePaidBy, splits, expenseData);
+			return equalExpense;
+		case SETTLEUP:
+			SettleUpExpense settleUpExpense = new SettleUpExpense(amount, expensePaidBy, splits, expenseData);
+			return settleUpExpense;
 		default:
 			return null;
 		}
+	}
+
+	@Override
+	public ExpenseDTO expenseToExpenseDTO(Expense expense) {
+
+		ExpenseDTO expenseDTO = new ExpenseDTO();
+		expenseDTO.setId(expense.getId());
+		expenseDTO.setExpAmt(expense.getAmount());
+		expenseDTO.setExpenseData(this.expenseDataToExpenseDataDTO(expense.getExpenseData()));
+		expenseDTO.setExpName(expense.getExpenseName());
+		expenseDTO.setExpGrp(expense.getExpGroup().getId());
+		expenseDTO.setExpPaidBy(expense.getExpensePaidBy().getId());
+		expenseDTO.setExpType(expense.getExpenseType().name());
+
+		System.out.println(expense.getExpenseStatus());
+		expenseDTO.setStaus(expense.getExpenseStatus().toString());
+
+		List<SplitDTO> splitDTOs = new ArrayList<>();
+
+		for (Split split : expense.getSplits()) {
+			splitDTOs.add(splitService.splitToSplitDTO(split));
+		}
+
+		expenseDTO.setUsrSplitBtw(splitDTOs);
+		return expenseDTO;
+	}
+
+	@Override
+	public ExpenseDTO createExpense(ExpenseDTO expenseDTO) {
+		Expense expense = this.ExpenseDTOToExpense(expenseDTO);
+		if (expense.validate() && expense.getExpenseType().compareTo(ExpenseType.SETTLEUP) != 0) {
+			expense.setExpenseStatus(ExpenseStatus.CREATED);
+			for (Split s : expense.getSplits()) {
+				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
+				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
+			}
+			expenseRepository.save(expense);
+		} else {
+			return null;
+		}
+		return expenseToExpenseDTO(expense);
+	}
+
+	@Override
+	public ExpenseDTO UpdateExpense(Long Expenseid, ExpenseDTO expenseDTO) {
+
+		Expense expense = expenseRepository.findById(Expenseid).get();
+		for (Split s : expense.getSplits()) {
+			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
+			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
+		}
+
+		splitService.deleteAllSplits(expense.getSplits());
+
+//		expense.setExpenseData(ExpenseDataDTOToExpenseData(expenseDTO.getExpenseData()));
+//		expense.setAmount(expenseDTO.getExpAmt());
+//		expense.setExpenseName(expenseDTO.getExpName());
+//		expense.setExpensePaidBy(userService.getUserById(expenseDTO.getExpPaidBy()));
+//		expense.setExpenseType(ExpenseType.valueOf(expenseDTO.getExpType()));
+//		expense.setExpGroup(groupService.getGroupById(expenseDTO.getId()));
+//		expense.setSplits(null);
+
+		Expense exp = ExpenseDTOToExpense(expenseDTO);
+
+		if (exp.validate()) {
+			exp.setId(Expenseid);
+			expense.setExpenseData(exp.getExpenseData());
+			expense.setAmount(exp.getAmount());
+			expense.setExpenseName(exp.getExpenseName());
+			expense.setExpensePaidBy(exp.getExpensePaidBy());
+			expense.setExpenseType(exp.getExpenseType());
+			expense.setExpGroup(exp.getExpGroup());
+			expense.setSplits(exp.getSplits());
+			expense.setExpenseStatus(ExpenseStatus.UPDATED);
+			for (Split s : expense.getSplits()) {
+				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
+				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
+			}
+			expenseRepository.save(expense);
+		}
+		return expenseToExpenseDTO(expense);
+	}
+
+	@Override
+	public ExpenseDTO DeleteExpense(Long expenseId) {
+
+		Expense expense = expenseRepository.findById(expenseId).get();
+		for (Split s : expense.getSplits()) {
+			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
+			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
+		}
+		expense.setExpenseStatus(ExpenseStatus.DELETED);
+		expenseRepository.save(expense);
+		return expenseToExpenseDTO(expense);
+	}
+
+	@Override
+	public ExpenseDTO FindExpense(Long expenseId) {
+		return expenseToExpenseDTO(expenseRepository.findById(expenseId).get());
 	}
 
 	@Override
@@ -117,7 +219,27 @@ public class ExpenseServiceImp implements ExpenseService {
 	}
 
 	@Override
-	public String resolveExpense(Long expId) {
-		return null;
+	public ExpenseDTO resolveExpense(ExpenseDTO expenseDTO) {
+
+		Expense expense = this.ExpenseDTOToExpense(expenseDTO);
+
+		if (expense.validate() && expense.getExpenseType().compareTo(ExpenseType.SETTLEUP) == 0) {
+			expenseRepository.save(expense);
+		} else {
+			return null;
+		}
+		return expenseToExpenseDTO(expense);
+	}
+
+	@Override
+	public List<ExpenseDTO> findAllExpenseOfUser(Long userid) {
+
+		List<ExpenseDTO> expenseDTOs = new ArrayList<>();
+
+		for (Expense expense : expenseRepository.findExpenseByUserIdAndSort(userid,
+				Sort.by("timestamp").descending())) {
+			expenseDTOs.add(this.expenseToExpenseDTO(expense));
+		}
+		return expenseDTOs;
 	}
 }

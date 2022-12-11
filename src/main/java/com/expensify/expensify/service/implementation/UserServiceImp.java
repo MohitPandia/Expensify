@@ -44,7 +44,6 @@ public class UserServiceImp implements UserService {
 	public UserDTO UserToUserDTO(User user) {
 
 		UserDTO userDTO = new UserDTO();
-
 		userDTO.setUserEmail(user.getUserEmail());
 		userDTO.setUserFirstName(user.getUserFirstName());
 		userDTO.setUserLastName(user.getUserLastName());
@@ -56,9 +55,7 @@ public class UserServiceImp implements UserService {
 
 	@Override
 	public User createUser(@Valid UserDTO userDTO) {
-
 		System.out.println(userDTO);
-
 		User user = this.UserDTOTOUser(userDTO);
 		user.setRole(UserRoles.USER.toString());
 		System.out.println(user);
@@ -96,10 +93,8 @@ public class UserServiceImp implements UserService {
 	@Override
 	public User userLogin(UserLoginDTO userLogin) {
 		// TODO Auto-generated method stub
-
+//
 		User user = userRepository.findByUserName(userLogin.getUserName());
-
-		System.out.println("User found" + user);
 		if (user == null) {
 			return null;
 		}

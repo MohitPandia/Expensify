@@ -1,18 +1,26 @@
 package com.expensify.expensify.service;
 
-import com.expensify.expensify.entity.expense.Expense;
-import com.expensify.expensify.dto.ExpenseDTO;
-import com.expensify.expensify.entity.ExpenseType;
-import com.expensify.expensify.entity.User;
-import com.expensify.expensify.entity.expense.ExpenseData;
-import com.expensify.expensify.entity.split.Split;
-
 import java.util.List;
 
-public interface ExpenseService {
-    Expense createExpense(ExpenseDTO expenseModel);
-    Expense createExpense(ExpenseType expenseType, ExpenseDTO expenseModel,List<Split> splits);
-    List<Expense> getGrpExpenses(Long groupId);
+import com.expensify.expensify.dto.ExpenseDTO;
+import com.expensify.expensify.entity.expense.Expense;
 
-    String resolveExpense(Long expId);
+public interface ExpenseService {
+	ExpenseDTO createExpense(ExpenseDTO expenseModel);
+
+//	Expense createExpense(ExpenseType expenseType, ExpenseDTO expenseModel, List<Split> splits);
+
+	List<Expense> getGrpExpenses(Long groupId);
+
+	ExpenseDTO resolveExpense(ExpenseDTO expenseModel);
+
+	ExpenseDTO UpdateExpense(Long id, ExpenseDTO expenseDTO);
+
+	ExpenseDTO DeleteExpense(Long expenseId);
+
+	ExpenseDTO FindExpense(Long expenseId);
+
+	ExpenseDTO expenseToExpenseDTO(Expense expense);
+
+	List<ExpenseDTO> findAllExpenseOfUser(Long userid);
 }

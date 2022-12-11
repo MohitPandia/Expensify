@@ -7,7 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExpenseDataDTO {
+public class DueAmountDTO {
 
-	private String description;
+	private UserDTO userFrom;
+	private UserDTO userTo;
+	private double amount;
+
 }

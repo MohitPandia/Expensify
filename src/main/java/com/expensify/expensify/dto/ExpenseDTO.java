@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ExpenseDTO {
 
+	private Long id;
 	@NotNull(message = "expense name is required")
 	private String expName;
 	@NotNull(message = "expense amount is requird")
@@ -29,5 +30,7 @@ public class ExpenseDTO {
 	private ExpenseDataDTO expenseData;
 	@NotNull(message = "expense type is required")
 	private String expType;
+
+	private String Staus;
 
 }

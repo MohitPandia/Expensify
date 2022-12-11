@@ -28,4 +28,5 @@ public interface UserService {
 	User userLogin(UserLoginDTO userLogin);
 
 	User loadUserByUserName(String userName);
+
 }

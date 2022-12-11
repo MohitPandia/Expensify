@@ -14,12 +14,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expensify.expensify.dto.DueAmountDTO;
+import com.expensify.expensify.dto.ExpenseDTO;
 import com.expensify.expensify.dto.JWTResponseDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.split.Split;
+import com.expensify.expensify.service.DueAmountService;
+import com.expensify.expensify.service.ExpenseService;
 import com.expensify.expensify.service.UserService;
 import com.expensify.expensify.utility.JWTUtility;
 
@@ -29,6 +33,11 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private ExpenseService expenseService;
+	@Autowired
+	private DueAmountService dueAmountService;
 
 	@Autowired
 	JWTUtility jwtUtility;
@@ -44,9 +53,8 @@ public class UserController {
 
 	@PostMapping("/login")
 	public JWTResponseDTO loginUser(@RequestBody @Valid UserLoginDTO userLoginDTO) throws Exception {
-		User user = userService.userLogin(userLoginDTO);
 
-		System.out.println(user);
+		User user = userService.userLogin(userLoginDTO);
 		if (user == null) {
 			throw new Exception("INVALID_CREDENTIALS");
 		}
@@ -66,6 +74,11 @@ public class UserController {
 		return user;
 	}
 
+	@GetMapping("/myexpense")
+	public List<ExpenseDTO> getAllExpenses(@AuthenticationPrincipal User user) {
+		return expenseService.findAllExpenseOfUser(user.getId());
+	}
+
 	@GetMapping("/name/{name}")
 	public User getUserByName(@PathVariable("name") String name) {
 		return userService.loadUserByUserName(name);
@@ -79,6 +92,16 @@ public class UserController {
 	@GetMapping("/groups/{id}")
 	public List<Group> getUserGroups(@PathVariable("id") Long userId) {
 		return userService.getUserGroups(userId);
+	}
+
+	@GetMapping("/settleUps")
+	public List<DueAmountDTO> getALLSettleUpUserAmount(@AuthenticationPrincipal User user) {
+		return dueAmountService.getAllDueAmountForm(user.getId());
+	}
+
+	@GetMapping("/settleUps/{id}")
+	public DueAmountDTO getALLSettleUpUserFromAmount(@AuthenticationPrincipal User user, @PathVariable("id") Long id) {
+		return dueAmountService.getAllDueAmountTo(user, id);
 	}
 
 	@GetMapping("/expenses/{id}")

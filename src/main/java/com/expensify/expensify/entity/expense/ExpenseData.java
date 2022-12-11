@@ -8,9 +8,9 @@ import javax.persistence.Entity;
 @Data
 @Embeddable
 public class ExpenseData {
-    private String name;
+    private String description;
     public ExpenseData(String name){
-        this.name = name;
+        this.description = name;
     }
 
     public ExpenseData() {
