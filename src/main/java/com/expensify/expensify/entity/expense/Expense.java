@@ -24,11 +24,13 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.expensify.expensify.entity.Activity;
 import com.expensify.expensify.entity.ExpenseStatus;
 import com.expensify.expensify.entity.ExpenseType;
 import com.expensify.expensify.entity.Group;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.split.Split;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -49,7 +51,7 @@ public abstract class Expense implements Serializable {
 	private String expenseName;
 	private double amount;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn
 	private User expensePaidBy;
 
@@ -62,11 +64,15 @@ public abstract class Expense implements Serializable {
 	@Enumerated(EnumType.STRING)
 	private ExpenseStatus expenseStatus;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn
 	private Group expGroup;
 	@Embedded
 	private ExpenseData expenseData;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "expense", fetch = FetchType.LAZY)
+	@JsonIgnore
+	List<Activity> activitys;
 
 	public Expense(double amount, User expensePaidBy, List<Split> splits, ExpenseData expenseData) {
 		this.amount = amount;

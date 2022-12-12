@@ -22,6 +22,7 @@ import com.expensify.expensify.entity.expense.SettleUpExpense;
 import com.expensify.expensify.entity.split.PercentSplit;
 import com.expensify.expensify.entity.split.Split;
 import com.expensify.expensify.repository.Expense.ExpenseRepository;
+import com.expensify.expensify.service.ActivityService;
 import com.expensify.expensify.service.DueAmountService;
 import com.expensify.expensify.service.ExpenseService;
 import com.expensify.expensify.service.GroupService;
@@ -44,21 +45,20 @@ public class ExpenseServiceImp implements ExpenseService {
 	GroupService groupService;
 
 	@Autowired
+	ActivityService activityService;
+
+	@Autowired
 	DueAmountService dueAmountService;
 
 	public ExpenseData ExpenseDataDTOToExpenseData(ExpenseDataDTO expenseDataDTO) {
 		ExpenseData expenseData = new ExpenseData();
-
 		expenseData.setDescription(expenseDataDTO.getDescription());
-
 		return expenseData;
 	}
 
 	public ExpenseDataDTO expenseDataToExpenseDataDTO(ExpenseData expenseData) {
 		ExpenseDataDTO expenseDataDTO = new ExpenseDataDTO();
-
 		expenseDataDTO.setDescription(expenseData.getDescription());
-
 		return expenseDataDTO;
 
 	}
@@ -127,7 +127,7 @@ public class ExpenseServiceImp implements ExpenseService {
 		expenseDTO.setExpType(expense.getExpenseType().name());
 
 		System.out.println(expense.getExpenseStatus());
-		expenseDTO.setStaus(expense.getExpenseStatus().toString());
+		expenseDTO.setStatus(expense.getExpenseStatus().toString());
 
 		List<SplitDTO> splitDTOs = new ArrayList<>();
 
@@ -147,7 +147,10 @@ public class ExpenseServiceImp implements ExpenseService {
 			for (Split s : expense.getSplits()) {
 				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
 				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
+				activityService.createActivity(s.getUser(), expense, s);
 			}
+			activityService.createActivity(expense.getExpensePaidBy(), expense, null);
+
 			expenseRepository.save(expense);
 		} else {
 			return null;
@@ -189,7 +192,10 @@ public class ExpenseServiceImp implements ExpenseService {
 			for (Split s : expense.getSplits()) {
 				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
 				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
+				activityService.createActivity(s.getUser(), expense, s);
 			}
+			activityService.createActivity(expense.getExpensePaidBy(), expense, null);
+
 			expenseRepository.save(expense);
 		}
 		return expenseToExpenseDTO(expense);
@@ -202,7 +208,9 @@ public class ExpenseServiceImp implements ExpenseService {
 		for (Split s : expense.getSplits()) {
 			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
 			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
+			activityService.createActivity(s.getUser(), expense, s);
 		}
+		activityService.createActivity(expense.getExpensePaidBy(), expense, null);
 		expense.setExpenseStatus(ExpenseStatus.DELETED);
 		expenseRepository.save(expense);
 		return expenseToExpenseDTO(expense);

@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
+
+	private Long id;
 	@NotNull(message = "First Name is required")
 	private String userFirstName;
 	@NotNull(message = "Last name is required")

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -47,7 +48,7 @@ public class User implements UserDetails, Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManyToMany(mappedBy = "groupUsers")
+	@ManyToMany(cascade = CascadeType.ALL, mappedBy = "groupUsers", fetch = FetchType.LAZY)
 	@JsonIgnore
 	private List<Group> userGroups;
 	private String userFirstName;
@@ -61,23 +62,32 @@ public class User implements UserDetails, Serializable {
 
 	private Boolean enabled = false;
 
+	@JsonIgnore
 	private String role;
 
-	@OneToMany(mappedBy = "expensePaidBy", fetch = FetchType.LAZY)
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "expensePaidBy", fetch = FetchType.LAZY)
 	@JsonIgnore
 	private List<Expense> paidExpense;
 
-	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user", fetch = FetchType.LAZY)
 	@JsonIgnore
 	private List<Split> expenses;
 
-	@OneToMany(mappedBy = "dueA1mountPK.userFrom")
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "dueA1mountPK.userFrom")
 	@JsonIgnore
 	private List<DueAmount> userFrom;
 
-	@OneToMany(mappedBy = "dueA1mountPK.userTo")
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "dueA1mountPK.userTo")
 	@JsonIgnore
 	private List<DueAmount> userTo;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "user", fetch = FetchType.LAZY)
+	@JsonIgnore
+	private List<Activity> activities;
+
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JsonIgnore
+	private List<User> friends;
 
 	public User(Long id) {
 		this.id = id;

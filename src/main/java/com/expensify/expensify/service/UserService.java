@@ -2,6 +2,7 @@ package com.expensify.expensify.service;
 
 import java.util.List;
 
+import com.expensify.expensify.dto.AddFriendDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
@@ -12,6 +13,8 @@ public interface UserService {
 	User UserDTOTOUser(UserDTO userDTO);
 
 	UserDTO UserToUserDTO(User user);
+
+	UserDTO updateUser(User user, UserDTO userDTO);
 
 	User createUser(UserDTO userModel);
 
@@ -28,5 +31,9 @@ public interface UserService {
 	User userLogin(UserLoginDTO userLogin);
 
 	User loadUserByUserName(String userName);
+
+	List<UserDTO> getAllFriendList(User user);
+
+	boolean addFriend(User user, AddFriendDTO addFriendDTO);
 
 }

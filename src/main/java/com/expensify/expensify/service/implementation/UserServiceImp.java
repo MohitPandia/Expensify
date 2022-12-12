@@ -1,5 +1,6 @@
 package com.expensify.expensify.service.implementation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -9,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.expensify.expensify.Exception.User.UserNotFound;
+import com.expensify.expensify.dto.AddFriendDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
@@ -29,7 +31,6 @@ public class UserServiceImp implements UserService {
 	@Override
 	public User UserDTOTOUser(UserDTO userDTO) {
 		User user = new User();
-
 		user.setUserFirstName(userDTO.getUserFirstName());
 		user.setUserLastName(userDTO.getUserLastName());
 		user.setUserName(userDTO.getUserName());
@@ -42,8 +43,8 @@ public class UserServiceImp implements UserService {
 
 	@Override
 	public UserDTO UserToUserDTO(User user) {
-
 		UserDTO userDTO = new UserDTO();
+		userDTO.setId(user.getId());
 		userDTO.setUserEmail(user.getUserEmail());
 		userDTO.setUserFirstName(user.getUserFirstName());
 		userDTO.setUserLastName(user.getUserLastName());
@@ -61,6 +62,19 @@ public class UserServiceImp implements UserService {
 		System.out.println(user);
 		userRepository.save(user);
 		return user;
+	}
+
+	@Override
+	public UserDTO updateUser(User user, UserDTO userDTO) {
+
+		user.setUserFirstName(userDTO.getUserFirstName());
+		user.setUserLastName(userDTO.getUserLastName());
+		user.setUserName(userDTO.getUserName());
+		user.setUserEmail(userDTO.getUserEmail());
+		user.setUserMobileNumber(userDTO.getUserMobileNumber());
+//		user.setUserPassword(passwordEncoder.encode(userDTO.getUserPassword()));
+		userRepository.save(user);
+		return UserToUserDTO(user);
 	}
 
 	@Override
@@ -108,6 +122,32 @@ public class UserServiceImp implements UserService {
 	@Override
 	public User loadUserByUserName(String userName) {
 		return userRepository.findByUserName(userName);
+	}
+
+	@Override
+	public List<UserDTO> getAllFriendList(User user) {
+//		System.out.println(user);
+		List<User> friends = user.getFriends();
+		List<UserDTO> userDTOs = new ArrayList<>();
+		if (friends.isEmpty()) {
+			return userDTOs;
+		}
+		for (User u : friends) {
+			userDTOs.add(UserToUserDTO(u));
+		}
+		return userDTOs;
+	}
+
+	@Override
+	public boolean addFriend(User user, AddFriendDTO addFriendDTO) {
+		User friend = this.getUserById(addFriendDTO.getId());
+
+		if (friend == null) {
+			return false;
+		}
+		user.getFriends().add(friend);
+		userRepository.save(user);
+		return true;
 	}
 
 }

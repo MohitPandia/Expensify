@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expensify.expensify.dto.ActivityDTO;
+import com.expensify.expensify.dto.AddFriendDTO;
 import com.expensify.expensify.dto.DueAmountDTO;
 import com.expensify.expensify.dto.ExpenseDTO;
 import com.expensify.expensify.dto.JWTResponseDTO;
@@ -22,6 +24,7 @@ import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.split.Split;
+import com.expensify.expensify.service.ActivityService;
 import com.expensify.expensify.service.DueAmountService;
 import com.expensify.expensify.service.ExpenseService;
 import com.expensify.expensify.service.UserService;
@@ -40,7 +43,10 @@ public class UserController {
 	private DueAmountService dueAmountService;
 
 	@Autowired
-	JWTUtility jwtUtility;
+	private ActivityService activityService;
+
+	@Autowired
+	private JWTUtility jwtUtility;
 
 	@PostMapping("/register")
 	public JWTResponseDTO registerUser(@RequestBody @Valid UserDTO userModel) {
@@ -67,6 +73,10 @@ public class UserController {
 	@GetMapping("/{id}")
 	public User getUserById(@PathVariable("id") Long userId) {
 		return userService.getUserById(userId);
+	}
+
+	private UserDTO updateUser(@AuthenticationPrincipal User user, @RequestBody @Valid UserDTO userdto) {
+		return userService.updateUser(user, userdto);
 	}
 
 	@GetMapping("/current")
@@ -112,5 +122,21 @@ public class UserController {
 	@DeleteMapping("/{id}")
 	public String deleteUser(@PathVariable("id") Long userId) {
 		return userService.deleteUser(userId);
+	}
+
+	@GetMapping("/activity")
+	public List<ActivityDTO> getUserActivity(@AuthenticationPrincipal User user) {
+		return activityService.getALLActivityOfUser(user);
+	}
+
+	@GetMapping("/friend")
+	public List<UserDTO> getALLFriends(@AuthenticationPrincipal User user) {
+		return userService.getAllFriendList(user);
+	}
+
+	@PostMapping("/friend")
+	public boolean addFriend(@AuthenticationPrincipal User user, @RequestBody AddFriendDTO addFriendDTO) {
+		return userService.addFriend(user, addFriendDTO);
+
 	}
 }

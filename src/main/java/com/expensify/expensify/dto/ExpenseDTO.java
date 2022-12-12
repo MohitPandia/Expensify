@@ -31,6 +31,6 @@ public class ExpenseDTO {
 	@NotNull(message = "expense type is required")
 	private String expType;
 
-	private String Staus;
+	private String status;
 
 }
