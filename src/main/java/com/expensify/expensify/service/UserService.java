@@ -34,6 +34,6 @@ public interface UserService {
 
 	List<UserDTO> getAllFriendList(User user);
 
-	boolean addFriend(User user, AddFriendDTO addFriendDTO);
+	AddFriendDTO addFriend(User user, AddFriendDTO addFriendDTO);
 
 }

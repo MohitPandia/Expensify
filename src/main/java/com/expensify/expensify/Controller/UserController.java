@@ -6,6 +6,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expensify.expensify.Exception.User.UserServiceException;
 import com.expensify.expensify.dto.ActivityDTO;
 import com.expensify.expensify.dto.AddFriendDTO;
 import com.expensify.expensify.dto.DueAmountDTO;
@@ -30,6 +32,7 @@ import com.expensify.expensify.service.ExpenseService;
 import com.expensify.expensify.service.UserService;
 import com.expensify.expensify.utility.JWTUtility;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -62,7 +65,7 @@ public class UserController {
 
 		User user = userService.userLogin(userLoginDTO);
 		if (user == null) {
-			throw new Exception("INVALID_CREDENTIALS");
+			throw new UserServiceException("INVALID_CREDENTIALS");
 		}
 
 		final String token = jwtUtility.generateToken(user);
@@ -135,7 +138,7 @@ public class UserController {
 	}
 
 	@PostMapping("/friend")
-	public boolean addFriend(@AuthenticationPrincipal User user, @RequestBody AddFriendDTO addFriendDTO) {
+	public AddFriendDTO addFriend(@AuthenticationPrincipal User user, @RequestBody AddFriendDTO addFriendDTO) {
 		return userService.addFriend(user, addFriendDTO);
 
 	}

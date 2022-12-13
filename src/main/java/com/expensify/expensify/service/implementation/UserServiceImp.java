@@ -9,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.expensify.expensify.Exception.User.UserNotFound;
+import com.expensify.expensify.Exception.User.UserNotFoundException;
+import com.expensify.expensify.Exception.User.UserServiceException;
 import com.expensify.expensify.dto.AddFriendDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
@@ -57,6 +58,11 @@ public class UserServiceImp implements UserService {
 	@Override
 	public User createUser(@Valid UserDTO userDTO) {
 		System.out.println(userDTO);
+
+		if (userRepository.findByUserNameAndUserEmail(userDTO.getUserName(), userDTO.getUserEmail()).size() > 0) {
+			throw new UserServiceException("username or useremail is not unique");
+		}
+
 		User user = this.UserDTOTOUser(userDTO);
 		user.setRole(UserRoles.USER.toString());
 		System.out.println(user);
@@ -69,8 +75,8 @@ public class UserServiceImp implements UserService {
 
 		user.setUserFirstName(userDTO.getUserFirstName());
 		user.setUserLastName(userDTO.getUserLastName());
-		user.setUserName(userDTO.getUserName());
-		user.setUserEmail(userDTO.getUserEmail());
+//		user.setUserName(userDTO.getUserName());
+//		user.setUserEmail(userDTO.getUserEmail());
 		user.setUserMobileNumber(userDTO.getUserMobileNumber());
 //		user.setUserPassword(passwordEncoder.encode(userDTO.getUserPassword()));
 		userRepository.save(user);
@@ -80,7 +86,7 @@ public class UserServiceImp implements UserService {
 	@Override
 	public User getUserById(Long userId) {
 		return userRepository.findById(userId)
-				.orElseThrow(() -> new UserNotFound("User with user id " + userId + " Not Found"));
+				.orElseThrow(() -> new UserNotFoundException("User with user id " + userId + " Not Found"));
 	}
 
 	@Override
@@ -139,15 +145,23 @@ public class UserServiceImp implements UserService {
 	}
 
 	@Override
-	public boolean addFriend(User user, AddFriendDTO addFriendDTO) {
-		User friend = this.getUserById(addFriendDTO.getId());
+	public AddFriendDTO addFriend(User user, AddFriendDTO addFriendDTO) {
+		User friend = userRepository.findByUserName(addFriendDTO.getUserName());
 
+		addFriendDTO.setStatus(false);
 		if (friend == null) {
-			return false;
+			return addFriendDTO;
+		}
+		addFriendDTO.setStatus(true);
+
+		for (User u : user.getFriends()) {
+			if (u.getId() == friend.getId()) {
+				throw new UserServiceException("This user is already your friend");
+			}
 		}
 		user.getFriends().add(friend);
 		userRepository.save(user);
-		return true;
+		return addFriendDTO;
 	}
 
 }

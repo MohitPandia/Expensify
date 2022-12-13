@@ -1,13 +1,17 @@
 package com.expensify.expensify.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.expensify.expensify.entity.User;
+import com.expensify.expensify.entity.User;;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
 	User findByUserName(String userName);
+
+	List<User> findByUserNameAndUserEmail(String userName, String userEmail);
 
 }

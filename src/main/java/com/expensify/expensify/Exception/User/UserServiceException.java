@@ -1,6 +1,6 @@
 package com.expensify.expensify.Exception.User;
 
-public class UserNotFound extends RuntimeException {
+public class UserServiceException extends RuntimeException {
 	/**
 	 * 
 	 */
@@ -8,11 +8,11 @@ public class UserNotFound extends RuntimeException {
 
 	private String message;
 
-	public UserNotFound() {
+	public UserServiceException() {
 
 	}
 
-	public UserNotFound(String str) {
+	public UserServiceException(String str) {
 		super(str);
 		this.message = str;
 	}

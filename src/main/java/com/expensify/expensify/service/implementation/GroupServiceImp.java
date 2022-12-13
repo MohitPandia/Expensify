@@ -30,8 +30,8 @@ public class GroupServiceImp implements GroupService {
 
 		List<User> users = new ArrayList<>(groupDTO.getGrpUser().size());
 
-		for (Long UserId : groupDTO.getGrpUser()) {
-			User UserInstance = userRepository.findById(UserId).get();
+		for (String UserName : groupDTO.getGrpUser()) {
+			User UserInstance = userRepository.findByUserName(UserName);
 			UserInstance.getUserGroups().add(group);
 			users.add(UserInstance);
 		}

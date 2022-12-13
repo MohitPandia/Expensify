@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.expensify.expensify.dto.ExpenseDTO;
-import com.expensify.expensify.entity.expense.Expense;
 import com.expensify.expensify.service.ExpenseService;
 
 @RestController
@@ -35,7 +34,7 @@ public class ExpenseController {
 	}
 
 	@GetMapping("/group/{id}")
-	public List<Expense> getGrpExpenses(@PathVariable("id") Long groupId) {
+	public List<ExpenseDTO> getGrpExpenses(@PathVariable("id") Long groupId) {
 		return expenseService.getGrpExpenses(groupId);
 	}
 

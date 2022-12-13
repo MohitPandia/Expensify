@@ -19,6 +19,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.UniqueConstraint;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,7 +35,8 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Data
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = { @UniqueConstraint(name = "username_unique", columnNames = "userName"),
+		@UniqueConstraint(name = "email_unique", columnNames = "userEmail") })
 @NoArgsConstructor
 @AllArgsConstructor
 public class User implements UserDetails, Serializable {
@@ -53,8 +55,10 @@ public class User implements UserDetails, Serializable {
 	private List<Group> userGroups;
 	private String userFirstName;
 	private String userLastName;
+	@Column(unique = true)
 	private String userName;
 	private String userMobileNumber;
+	@Column(unique = true)
 	private String userEmail;
 
 	// @Column(length = 60)

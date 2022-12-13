@@ -32,7 +32,7 @@ public class SplitServiceImp implements SplitService {
 		splitDTO.setAmount(split.getAmount());
 		splitDTO.setPercent(split.getAmount());
 		splitDTO.setUser(split.getUser().getId());
-
+		splitDTO.setUserName(split.getUser().getUserName());
 		return splitDTO;
 	}
 
@@ -53,6 +53,7 @@ public class SplitServiceImp implements SplitService {
 		return null;
 	}
 
+	@Override
 	public void deleteAllSplits(List<Split> splits) {
 
 		splitRepository.deleteAllInBatch(splits);

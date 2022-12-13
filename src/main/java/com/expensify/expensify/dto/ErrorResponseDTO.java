@@ -1,7 +1,5 @@
 package com.expensify.expensify.dto;
 
-import javax.validation.constraints.NotNull;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,11 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddFriendDTO {
+public class ErrorResponseDTO {
+	private int statusCode;
+	private String message;
 
-	@NotNull(message = "username is requied")
-	private String userName;
-
-	private boolean status;
-
+	public ErrorResponseDTO(String message) {
+		super();
+		this.message = message;
+	}
 }

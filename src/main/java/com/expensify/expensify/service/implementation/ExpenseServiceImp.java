@@ -222,8 +222,14 @@ public class ExpenseServiceImp implements ExpenseService {
 	}
 
 	@Override
-	public List<Expense> getGrpExpenses(Long groupId) {
-		return groupService.getGroupExpenses(groupId);
+	public List<ExpenseDTO> getGrpExpenses(Long groupId) {
+
+		List<ExpenseDTO> expenseDTOs = new ArrayList<>();
+
+		for (Expense expense : groupService.getGroupExpenses(groupId)) {
+			expenseDTOs.add(this.expenseToExpenseDTO(expense));
+		}
+		return expenseDTOs;
 	}
 
 	@Override

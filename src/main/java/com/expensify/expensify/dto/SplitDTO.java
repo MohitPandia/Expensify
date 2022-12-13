@@ -13,6 +13,8 @@ public class SplitDTO {
 
 	@NotNull(message = "user id is requied")
 	private Long user;
+
+	private String userName;
 	private double amount;
 	private double percent;
 }

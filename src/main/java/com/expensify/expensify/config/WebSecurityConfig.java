@@ -16,10 +16,8 @@ public class WebSecurityConfig {
 
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**").allowedOrigins("*").allowedMethods("GET", "PUT", "POST", "PATCH", "DELETE",
-						"OPTIONS");
+				registry.addMapping("/**").allowedOrigins("http://localhost:8080", "http://127.0.0.1:5500");
 			}
-
 		};
 	}
 

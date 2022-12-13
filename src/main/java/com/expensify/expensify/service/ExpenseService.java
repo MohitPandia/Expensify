@@ -10,7 +10,7 @@ public interface ExpenseService {
 
 //	Expense createExpense(ExpenseType expenseType, ExpenseDTO expenseModel, List<Split> splits);
 
-	List<Expense> getGrpExpenses(Long groupId);
+	List<ExpenseDTO> getGrpExpenses(Long groupId);
 
 	ExpenseDTO resolveExpense(ExpenseDTO expenseModel);
 
