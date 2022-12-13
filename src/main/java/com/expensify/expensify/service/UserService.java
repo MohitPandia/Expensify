@@ -2,7 +2,7 @@ package com.expensify.expensify.service;
 
 import java.util.List;
 
-import com.expensify.expensify.dto.AddFriendDTO;
+import com.expensify.expensify.dto.FriendDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
 import com.expensify.expensify.entity.Group;
@@ -24,7 +24,7 @@ public interface UserService {
 
 	List<Split> getUserExpenses(Long userId);
 
-	List<User> getAllUsers();
+	List<UserDTO> getAllUsers();
 
 	String deleteUser(Long userId);
 
@@ -34,6 +34,12 @@ public interface UserService {
 
 	List<UserDTO> getAllFriendList(User user);
 
-	AddFriendDTO addFriend(User user, AddFriendDTO addFriendDTO);
+	FriendDTO addFriend(User user, FriendDTO addFriendDTO);
+
+	int youOwe(User user);
+
+	int YouareOwed(User user);
+
+	List<FriendDTO> getALLFriendWithAmount(User user);
 
 }

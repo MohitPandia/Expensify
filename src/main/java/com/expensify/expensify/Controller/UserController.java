@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.expensify.expensify.Exception.User.UserServiceException;
 import com.expensify.expensify.dto.ActivityDTO;
-import com.expensify.expensify.dto.AddFriendDTO;
 import com.expensify.expensify.dto.DueAmountDTO;
 import com.expensify.expensify.dto.ExpenseDTO;
+import com.expensify.expensify.dto.FriendDTO;
 import com.expensify.expensify.dto.JWTResponseDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
@@ -78,8 +78,19 @@ public class UserController {
 		return userService.getUserById(userId);
 	}
 
+	@PostMapping("/update")
 	private UserDTO updateUser(@AuthenticationPrincipal User user, @RequestBody @Valid UserDTO userdto) {
 		return userService.updateUser(user, userdto);
+	}
+
+	@GetMapping("/youOwe")
+	private int getYouOwe(@AuthenticationPrincipal User user) {
+		return userService.youOwe(user);
+	}
+
+	@GetMapping("/youareOwe")
+	private int getYouareOwed(@AuthenticationPrincipal User user) {
+		return userService.YouareOwed(user);
 	}
 
 	@GetMapping("/current")
@@ -98,18 +109,23 @@ public class UserController {
 	}
 
 	@GetMapping("/all")
-	public List<User> getAllUsers() {
+	public List<UserDTO> getAllUsers() {
 		return userService.getAllUsers();
 	}
 
-	@GetMapping("/groups/{id}")
-	public List<Group> getUserGroups(@PathVariable("id") Long userId) {
-		return userService.getUserGroups(userId);
+	@GetMapping("/groups")
+	public List<Group> getUserGroups(@AuthenticationPrincipal User user) {
+		return userService.getUserGroups(user.getId());
 	}
 
 	@GetMapping("/settleUps")
 	public List<DueAmountDTO> getALLSettleUpUserAmount(@AuthenticationPrincipal User user) {
 		return dueAmountService.getAllDueAmountForm(user.getId());
+	}
+
+	@GetMapping("/friendExp")
+	public List<FriendDTO> getALLFriendWithAmount(@AuthenticationPrincipal User user) {
+		return userService.getALLFriendWithAmount(user);
 	}
 
 	@GetMapping("/settleUps/{id}")
@@ -138,7 +154,7 @@ public class UserController {
 	}
 
 	@PostMapping("/friend")
-	public AddFriendDTO addFriend(@AuthenticationPrincipal User user, @RequestBody AddFriendDTO addFriendDTO) {
+	public FriendDTO addFriend(@AuthenticationPrincipal User user, @RequestBody FriendDTO addFriendDTO) {
 		return userService.addFriend(user, addFriendDTO);
 
 	}

@@ -5,6 +5,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expensify.expensify.dto.ExpenseDTO;
 import com.expensify.expensify.dto.GroupDTO;
-import com.expensify.expensify.entity.Group;
+import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.entity.User;
-import com.expensify.expensify.entity.expense.Expense;
 import com.expensify.expensify.service.GroupService;
 
 @RestController
@@ -27,28 +28,29 @@ public class GroupController {
 	private GroupService groupService;
 
 	@PostMapping("/create")
-	public Group createGroup(@RequestBody @Valid GroupDTO groupModel) {
+	public GroupDTO createGroup(@AuthenticationPrincipal User user, @RequestBody @Valid GroupDTO groupModel) {
 		System.out.println(groupModel);
+		groupModel.getGrpUser().add(user.getUserName());
 		return groupService.createGroup(groupModel);
 	}
 
 	@PostMapping("/adduser/{id}")
-	public List<User> addUser(@PathVariable("id") Long GrpId, @RequestBody List<Long> users) {
+	public List<UserDTO> addUser(@PathVariable("id") Long GrpId, @RequestBody List<Long> users) {
 		return groupService.addUser(GrpId, users);
 	}
 
 	@GetMapping("/{id}")
-	public Group getGroupById(@PathVariable("id") Long GroupId) {
+	public GroupDTO getGroupById(@PathVariable("id") Long GroupId) {
 		return groupService.getGroupById(GroupId);
 	}
 
 	@GetMapping("/users/{id}")
-	public List<User> getGroupUsers(@PathVariable("id") Long GroupId) {
+	public List<UserDTO> getGroupUsers(@PathVariable("id") Long GroupId) {
 		return groupService.getGroupUsers(GroupId);
 	}
 
 	@GetMapping("/expenses/{id}")
-	public List<Expense> getGroupExpenses(@PathVariable("id") Long groupId) {
+	public List<ExpenseDTO> getGroupExpenses(@PathVariable("id") Long groupId) {
 		return groupService.getGroupExpenses(groupId);
 	}
 

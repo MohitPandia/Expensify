@@ -18,6 +18,6 @@ public class GroupDTO {
 	@NotNull(message = "group name is required")
 	private String grpName;
 	private String grpType;
-	@CollectionMinSize(min = 2, message = "minimum {min} group user are required")
+	@CollectionMinSize(min = 1, message = "minimum {min} group user are required")
 	private List<String> grpUser;
 }

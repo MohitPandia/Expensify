@@ -22,7 +22,7 @@ public class ExpenseDTO {
 	@NotNull(message = "expense amount is requird")
 	private double expAmt;
 	@NotNull(message = "expense pay by user is requied")
-	private Long expPaidBy;
+	private String expPaidBy;
 
 	@CollectionMinSize(min = 1)
 	private List<@Valid SplitDTO> usrSplitBtw;

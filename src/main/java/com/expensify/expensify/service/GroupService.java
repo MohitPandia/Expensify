@@ -2,21 +2,20 @@ package com.expensify.expensify.service;
 
 import java.util.List;
 
+import com.expensify.expensify.dto.ExpenseDTO;
 import com.expensify.expensify.dto.GroupDTO;
-import com.expensify.expensify.entity.Group;
-import com.expensify.expensify.entity.User;
-import com.expensify.expensify.entity.expense.Expense;
+import com.expensify.expensify.dto.UserDTO;
 
 public interface GroupService {
-	Group createGroup(GroupDTO groupModel);
+	GroupDTO createGroup(GroupDTO groupModel);
 
-	Group getGroupById(Long groupId);
+	GroupDTO getGroupById(Long groupId);
 
-	List<User> addUser(Long grpId, List<Long> user);
+	List<UserDTO> addUser(Long grpId, List<Long> user);
 
-	List<User> getGroupUsers(Long groupId);
+	List<UserDTO> getGroupUsers(Long groupId);
 
-	List<Expense> getGroupExpenses(Long groupId);
+	List<ExpenseDTO> getGroupExpenses(Long groupId);
 
 	String deleteGroup(Long groupId);
 }

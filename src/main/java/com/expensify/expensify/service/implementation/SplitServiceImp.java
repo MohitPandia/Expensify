@@ -30,7 +30,9 @@ public class SplitServiceImp implements SplitService {
 	public SplitDTO splitToSplitDTO(Split split) {
 		SplitDTO splitDTO = new SplitDTO();
 		splitDTO.setAmount(split.getAmount());
-		splitDTO.setPercent(split.getAmount());
+		if (split instanceof PercentSplit) {
+			splitDTO.setPercent(((PercentSplit) split).getPercent());
+		}
 		splitDTO.setUser(split.getUser().getId());
 		splitDTO.setUserName(split.getUser().getUserName());
 		return splitDTO;
@@ -38,12 +40,11 @@ public class SplitServiceImp implements SplitService {
 
 	@Override
 	public Split createSplit(SplitDTO splitModel, ExpenseType type) {
-		User user = userRepository.findById(splitModel.getUser()).get();
+		User user = userRepository.findByUserName(splitModel.getUserName());
 		switch (type) {
 		case EXACT:
 			return new ExactSplit(user, splitModel.getAmount());
 		case EQUAL:
-			System.out.println("i ma here");
 			return new EqualSplit(user);
 		case PERCENT:
 			return new PercentSplit(user, splitModel.getPercent());

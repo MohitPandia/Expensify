@@ -9,11 +9,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddFriendDTO {
+public class FriendDTO {
 
 	@NotNull(message = "username is requied")
 	private String userName;
 
+	private double amount;
 	private boolean status;
 
 }

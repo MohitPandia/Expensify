@@ -25,7 +25,6 @@ public class UserDTO {
 	@NotNull(message = "user email address is required")
 	private String userEmail;
 
-	@NotNull(message = "password is required")
 	private String userPassword;
 
 	@Pattern(regexp = "^\\d{10}$", message = "invalid mobile number entered ")

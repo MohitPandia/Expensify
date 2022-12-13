@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.expensify.expensify.Exception.User.ExpenseServiceException;
 import com.expensify.expensify.dto.ExpenseDTO;
 import com.expensify.expensify.dto.ExpenseDataDTO;
 import com.expensify.expensify.dto.SplitDTO;
@@ -21,6 +22,7 @@ import com.expensify.expensify.entity.expense.PercentageExpense;
 import com.expensify.expensify.entity.expense.SettleUpExpense;
 import com.expensify.expensify.entity.split.PercentSplit;
 import com.expensify.expensify.entity.split.Split;
+import com.expensify.expensify.repository.GroupRepository;
 import com.expensify.expensify.repository.Expense.ExpenseRepository;
 import com.expensify.expensify.service.ActivityService;
 import com.expensify.expensify.service.DueAmountService;
@@ -40,6 +42,9 @@ public class ExpenseServiceImp implements ExpenseService {
 
 	@Autowired
 	UserService userService;
+
+	@Autowired
+	GroupRepository groupRepository;
 
 	@Autowired
 	GroupService groupService;
@@ -75,7 +80,7 @@ public class ExpenseServiceImp implements ExpenseService {
 		expense.setAmount(expenseDTO.getExpAmt());
 		expense.setExpenseType(expenseType);
 		expense.setExpenseName(expenseDTO.getExpName());
-		expense.setExpGroup(groupService.getGroupById(expenseDTO.getExpGrp()));
+		expense.setExpGroup(groupRepository.findById(expenseDTO.getExpGrp()).get());
 		for (Split split : expense.getSplits()) {
 			split.setExpense(expense);
 		}
@@ -85,7 +90,7 @@ public class ExpenseServiceImp implements ExpenseService {
 //	@Override
 	public Expense createExpense(ExpenseType expenseType, ExpenseDTO expenseDTO, List<Split> splits) {
 		double amount = expenseDTO.getExpAmt();
-		User expensePaidBy = userService.getUserById(expenseDTO.getExpPaidBy());
+		User expensePaidBy = userService.loadUserByUserName(expenseDTO.getExpPaidBy());
 		ExpenseData expenseData = this.ExpenseDataDTOToExpenseData(expenseDTO.getExpenseData());
 		switch (expenseType) {
 		case EXACT:
@@ -123,7 +128,7 @@ public class ExpenseServiceImp implements ExpenseService {
 		expenseDTO.setExpenseData(this.expenseDataToExpenseDataDTO(expense.getExpenseData()));
 		expenseDTO.setExpName(expense.getExpenseName());
 		expenseDTO.setExpGrp(expense.getExpGroup().getId());
-		expenseDTO.setExpPaidBy(expense.getExpensePaidBy().getId());
+		expenseDTO.setExpPaidBy(expense.getExpensePaidBy().getUserName());
 		expenseDTO.setExpType(expense.getExpenseType().name());
 
 		System.out.println(expense.getExpenseStatus());
@@ -223,13 +228,7 @@ public class ExpenseServiceImp implements ExpenseService {
 
 	@Override
 	public List<ExpenseDTO> getGrpExpenses(Long groupId) {
-
-		List<ExpenseDTO> expenseDTOs = new ArrayList<>();
-
-		for (Expense expense : groupService.getGroupExpenses(groupId)) {
-			expenseDTOs.add(this.expenseToExpenseDTO(expense));
-		}
-		return expenseDTOs;
+		return groupService.getGroupExpenses(groupId);
 	}
 
 	@Override
@@ -238,6 +237,15 @@ public class ExpenseServiceImp implements ExpenseService {
 		Expense expense = this.ExpenseDTOToExpense(expenseDTO);
 
 		if (expense.validate() && expense.getExpenseType().compareTo(ExpenseType.SETTLEUP) == 0) {
+
+			if (expense.getSplits().size() >= 1) {
+				throw new ExpenseServiceException("Settle up requied only one user");
+			}
+
+			Split s = expense.getSplits().get(0);
+			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
+			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
+			activityService.createActivity(s.getUser(), expense, s);
 			expenseRepository.save(expense);
 		} else {
 			return null;

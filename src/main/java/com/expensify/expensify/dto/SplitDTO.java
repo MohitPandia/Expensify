@@ -11,9 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SplitDTO {
 
-	@NotNull(message = "user id is requied")
 	private Long user;
-
+	@NotNull(message = "user id is requied")
 	private String userName;
 	private double amount;
 	private double percent;

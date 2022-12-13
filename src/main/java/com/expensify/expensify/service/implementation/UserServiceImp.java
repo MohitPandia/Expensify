@@ -2,6 +2,7 @@ package com.expensify.expensify.service.implementation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -11,13 +12,16 @@ import org.springframework.stereotype.Service;
 
 import com.expensify.expensify.Exception.User.UserNotFoundException;
 import com.expensify.expensify.Exception.User.UserServiceException;
-import com.expensify.expensify.dto.AddFriendDTO;
+import com.expensify.expensify.dto.FriendDTO;
 import com.expensify.expensify.dto.UserDTO;
 import com.expensify.expensify.dto.UserLoginDTO;
+import com.expensify.expensify.entity.DueAmount;
+import com.expensify.expensify.entity.DueAmountPK;
 import com.expensify.expensify.entity.Group;
 import com.expensify.expensify.entity.User;
 import com.expensify.expensify.entity.UserRoles;
 import com.expensify.expensify.entity.split.Split;
+import com.expensify.expensify.repository.DueAmountRepository;
 import com.expensify.expensify.repository.UserRepository;
 import com.expensify.expensify.service.UserService;
 
@@ -28,6 +32,9 @@ public class UserServiceImp implements UserService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	DueAmountRepository duRepository;
 
 	@Override
 	public User UserDTOTOUser(UserDTO userDTO) {
@@ -100,8 +107,15 @@ public class UserServiceImp implements UserService {
 	}
 
 	@Override
-	public List<User> getAllUsers() {
-		return userRepository.findAll();
+	public List<UserDTO> getAllUsers() {
+
+		List<UserDTO> userDTOs = new ArrayList<>();
+
+		for (User u : userRepository.findAll()) {
+			userDTOs.add(this.UserToUserDTO(u));
+		}
+
+		return userDTOs;
 	}
 
 	@Override
@@ -145,7 +159,7 @@ public class UserServiceImp implements UserService {
 	}
 
 	@Override
-	public AddFriendDTO addFriend(User user, AddFriendDTO addFriendDTO) {
+	public FriendDTO addFriend(User user, FriendDTO addFriendDTO) {
 		User friend = userRepository.findByUserName(addFriendDTO.getUserName());
 
 		addFriendDTO.setStatus(false);
@@ -162,6 +176,53 @@ public class UserServiceImp implements UserService {
 		user.getFriends().add(friend);
 		userRepository.save(user);
 		return addFriendDTO;
+	}
+
+	@Override
+	public int youOwe(User user) {
+		int ret = 0;
+
+		for (DueAmount d : user.getUserTo()) {
+			ret += d.getAmount();
+		}
+		return ret;
+	}
+
+	@Override
+	public int YouareOwed(User user) {
+		int ret = 0;
+
+		for (DueAmount d : user.getUserFrom()) {
+			ret += d.getAmount();
+		}
+		return ret;
+	}
+
+	@Override
+	public List<FriendDTO> getALLFriendWithAmount(User user) {
+
+		List<FriendDTO> friendDTOs = new ArrayList<>();
+
+		for (User u : user.getFriends()) {
+			FriendDTO friendDTO = new FriendDTO();
+
+			friendDTO.setUserName(u.getUserName());
+
+			DueAmountPK f1 = new DueAmountPK(user, u);
+			Optional<DueAmount> da1 = duRepository.findById(f1);
+			double d1 = 0;
+
+			if (da1.isPresent()) {
+				d1 = da1.get().getAmount();
+			}
+
+			friendDTO.setAmount(d1);
+
+			friendDTOs.add(friendDTO);
+		}
+
+		return friendDTOs;
+
 	}
 
 }
