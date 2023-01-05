@@ -1,5 +1,6 @@
 package com.expensify.expensify.dto;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -32,5 +33,7 @@ public class ExpenseDTO {
 	private String expType;
 
 	private String status;
+
+	private Date date;
 
 }

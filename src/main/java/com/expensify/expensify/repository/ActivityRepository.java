@@ -11,6 +11,6 @@ import com.expensify.expensify.entity.User;
 @Repository
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
-	List<Activity> findByUser(User user);
+	List<Activity> findByUserOrderByTimestampDesc(User user);
 
 }

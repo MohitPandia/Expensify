@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FriendDTO {
 
+	private Long id;
 	@NotNull(message = "username is requied")
 	private String userName;
 

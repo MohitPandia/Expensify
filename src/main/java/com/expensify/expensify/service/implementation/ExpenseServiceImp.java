@@ -80,7 +80,8 @@ public class ExpenseServiceImp implements ExpenseService {
 		expense.setAmount(expenseDTO.getExpAmt());
 		expense.setExpenseType(expenseType);
 		expense.setExpenseName(expenseDTO.getExpName());
-		expense.setExpGroup(groupRepository.findById(expenseDTO.getExpGrp()).get());
+		if (expenseDTO.getExpGrp() != null)
+			expense.setExpGroup(groupRepository.findById(expenseDTO.getExpGrp()).get());
 		for (Split split : expense.getSplits()) {
 			split.setExpense(expense);
 		}
@@ -127,7 +128,8 @@ public class ExpenseServiceImp implements ExpenseService {
 		expenseDTO.setExpAmt(expense.getAmount());
 		expenseDTO.setExpenseData(this.expenseDataToExpenseDataDTO(expense.getExpenseData()));
 		expenseDTO.setExpName(expense.getExpenseName());
-		expenseDTO.setExpGrp(expense.getExpGroup().getId());
+		if (expense.getExpGroup() != null)
+			expenseDTO.setExpGrp(expense.getExpGroup().getId());
 		expenseDTO.setExpPaidBy(expense.getExpensePaidBy().getUserName());
 		expenseDTO.setExpType(expense.getExpenseType().name());
 
@@ -141,6 +143,7 @@ public class ExpenseServiceImp implements ExpenseService {
 		}
 
 		expenseDTO.setUsrSplitBtw(splitDTOs);
+		expenseDTO.setDate(expense.getTimestamp());
 		return expenseDTO;
 	}
 
@@ -150,15 +153,15 @@ public class ExpenseServiceImp implements ExpenseService {
 		if (expense.validate() && expense.getExpenseType().compareTo(ExpenseType.SETTLEUP) != 0) {
 			expense.setExpenseStatus(ExpenseStatus.CREATED);
 			for (Split s : expense.getSplits()) {
-				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
-				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
+				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
+				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
 				activityService.createActivity(s.getUser(), expense, s);
 			}
-			activityService.createActivity(expense.getExpensePaidBy(), expense, null);
+//			activityService.createActivity(expense.getExpensePaidBy(), expense, null);
 
 			expenseRepository.save(expense);
 		} else {
-			return null;
+			throw new ExpenseServiceException("expense data is not valid");
 		}
 		return expenseToExpenseDTO(expense);
 	}
@@ -168,8 +171,8 @@ public class ExpenseServiceImp implements ExpenseService {
 
 		Expense expense = expenseRepository.findById(Expenseid).get();
 		for (Split s : expense.getSplits()) {
-			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
-			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
+			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
+			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
 		}
 
 		splitService.deleteAllSplits(expense.getSplits());
@@ -185,7 +188,6 @@ public class ExpenseServiceImp implements ExpenseService {
 		Expense exp = ExpenseDTOToExpense(expenseDTO);
 
 		if (exp.validate()) {
-			exp.setId(Expenseid);
 			expense.setExpenseData(exp.getExpenseData());
 			expense.setAmount(exp.getAmount());
 			expense.setExpenseName(exp.getExpenseName());
@@ -194,14 +196,17 @@ public class ExpenseServiceImp implements ExpenseService {
 			expense.setExpGroup(exp.getExpGroup());
 			expense.setSplits(exp.getSplits());
 			expense.setExpenseStatus(ExpenseStatus.UPDATED);
+//			expenseRepository.save(expense);
 			for (Split s : expense.getSplits()) {
-				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), (-1) * s.getAmount());
-				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), s.getAmount());
+				s.setExpense(expense);
+				dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
+				dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
 				activityService.createActivity(s.getUser(), expense, s);
 			}
 			activityService.createActivity(expense.getExpensePaidBy(), expense, null);
-
 			expenseRepository.save(expense);
+		} else {
+			throw new ExpenseServiceException("expense data is not valid");
 		}
 		return expenseToExpenseDTO(expense);
 	}
@@ -210,13 +215,14 @@ public class ExpenseServiceImp implements ExpenseService {
 	public ExpenseDTO DeleteExpense(Long expenseId) {
 
 		Expense expense = expenseRepository.findById(expenseId).get();
+		expense.setExpenseStatus(ExpenseStatus.DELETED);
 		for (Split s : expense.getSplits()) {
 			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
 			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
 			activityService.createActivity(s.getUser(), expense, s);
 		}
 		activityService.createActivity(expense.getExpensePaidBy(), expense, null);
-		expense.setExpenseStatus(ExpenseStatus.DELETED);
+
 		expenseRepository.save(expense);
 		return expenseToExpenseDTO(expense);
 	}
@@ -238,17 +244,18 @@ public class ExpenseServiceImp implements ExpenseService {
 
 		if (expense.validate() && expense.getExpenseType().compareTo(ExpenseType.SETTLEUP) == 0) {
 
-			if (expense.getSplits().size() >= 1) {
+			if (expense.getSplits().size() > 1) {
 				throw new ExpenseServiceException("Settle up requied only one user");
 			}
 
 			Split s = expense.getSplits().get(0);
+			expense.setExpenseStatus(ExpenseStatus.CREATED);
 			dueAmountService.updateAmount(expense.getExpensePaidBy(), s.getUser(), s.getAmount());
 			dueAmountService.updateAmount(s.getUser(), expense.getExpensePaidBy(), (-1) * s.getAmount());
 			activityService.createActivity(s.getUser(), expense, s);
 			expenseRepository.save(expense);
 		} else {
-			return null;
+			throw new ExpenseServiceException("expense data is not valid");
 		}
 		return expenseToExpenseDTO(expense);
 	}
@@ -257,10 +264,41 @@ public class ExpenseServiceImp implements ExpenseService {
 	public List<ExpenseDTO> findAllExpenseOfUser(Long userid) {
 
 		List<ExpenseDTO> expenseDTOs = new ArrayList<>();
-
 		for (Expense expense : expenseRepository.findExpenseByUserIdAndSort(userid,
 				Sort.by("timestamp").descending())) {
 			expenseDTOs.add(this.expenseToExpenseDTO(expense));
+		}
+		return expenseDTOs;
+	}
+
+	@Override
+	public List<ExpenseDTO> getUserfrdExpense(Long userid, Long frd) {
+		List<Expense> expense = expenseRepository.findExpenseByUserIdAndSort(userid, Sort.by("timestamp").descending());
+		List<Expense> ans = new ArrayList<Expense>();
+		for (Expense i : expense) {
+			boolean user = false;
+			boolean friend = false;
+
+			if (i.getExpensePaidBy().getId() == frd) {
+				friend = true;
+			}
+			for (Split j : i.getSplits()) {
+				if (j.getUser().getId() == frd) {
+					friend = true;
+					continue;
+				}
+			}
+
+			if (friend) {
+				ans.add(i);
+			}
+
+		}
+
+		List<ExpenseDTO> expenseDTOs = new ArrayList<>();
+
+		for (Expense e : ans) {
+			expenseDTOs.add(this.expenseToExpenseDTO(e));
 		}
 		return expenseDTOs;
 	}

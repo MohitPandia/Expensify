@@ -5,6 +5,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.expensify.expensify.dto.ExpenseDTO;
+import com.expensify.expensify.entity.User;
 import com.expensify.expensify.service.ExpenseService;
 
 @RestController
@@ -43,6 +45,11 @@ public class ExpenseController {
 		return expenseService.DeleteExpense(id);
 	}
 
+	@PostMapping("/{id}")
+	public ExpenseDTO deletePostExpense(@PathVariable("id") Long id) {
+		return expenseService.DeleteExpense(id);
+	}
+
 	@GetMapping("/{id}")
 	public ExpenseDTO getExpense(@PathVariable("id") Long id) {
 		return expenseService.FindExpense(id);
@@ -51,5 +58,10 @@ public class ExpenseController {
 	@PostMapping("/resolve")
 	public ExpenseDTO resolveExpense(@RequestBody @Valid ExpenseDTO expenseModel) {
 		return expenseService.resolveExpense(expenseModel);
+	}
+
+	@GetMapping("/friendExpeses/{frd}")
+	public List<ExpenseDTO> getFreindExpense(@AuthenticationPrincipal User user, @PathVariable("frd") Long id) {
+		return expenseService.getUserfrdExpense(user.getId(), id);
 	}
 }

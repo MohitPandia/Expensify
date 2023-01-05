@@ -23,6 +23,7 @@ import com.expensify.expensify.entity.UserRoles;
 import com.expensify.expensify.entity.split.Split;
 import com.expensify.expensify.repository.DueAmountRepository;
 import com.expensify.expensify.repository.UserRepository;
+import com.expensify.expensify.repository.Expense.ExpenseRepository;
 import com.expensify.expensify.service.UserService;
 
 @Service
@@ -35,6 +36,9 @@ public class UserServiceImp implements UserService {
 
 	@Autowired
 	DueAmountRepository duRepository;
+
+	@Autowired
+	private ExpenseRepository expenseRepository;
 
 	@Override
 	public User UserDTOTOUser(UserDTO userDTO) {
@@ -182,10 +186,13 @@ public class UserServiceImp implements UserService {
 	public int youOwe(User user) {
 		int ret = 0;
 
-		for (DueAmount d : user.getUserTo()) {
-			ret += d.getAmount();
+		for (DueAmount d : user.getUserFrom()) {
+			if (d.getAmount() > 0)
+				ret += d.getAmount();
+
 		}
 		return ret;
+
 	}
 
 	@Override
@@ -193,7 +200,8 @@ public class UserServiceImp implements UserService {
 		int ret = 0;
 
 		for (DueAmount d : user.getUserFrom()) {
-			ret += d.getAmount();
+			if (d.getAmount() < 0)
+				ret += d.getAmount();
 		}
 		return ret;
 	}
@@ -206,6 +214,7 @@ public class UserServiceImp implements UserService {
 		for (User u : user.getFriends()) {
 			FriendDTO friendDTO = new FriendDTO();
 
+			friendDTO.setId(u.getId());
 			friendDTO.setUserName(u.getUserName());
 
 			DueAmountPK f1 = new DueAmountPK(user, u);

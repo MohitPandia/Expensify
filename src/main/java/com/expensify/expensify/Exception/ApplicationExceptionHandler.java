@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.expensify.expensify.Exception.User.ExpenseServiceException;
 import com.expensify.expensify.Exception.User.UserServiceException;
 import com.expensify.expensify.dto.ErrorResponseDTO;
 
@@ -36,6 +37,12 @@ public class ApplicationExceptionHandler {
 	@ExceptionHandler(value = UserServiceException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ErrorResponseDTO handleUserServiceException(UserServiceException ex) {
+		return new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
+	}
+
+	@ExceptionHandler(value = ExpenseServiceException.class)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	public ErrorResponseDTO handleExpenseServiceException(ExpenseServiceException ex) {
 		return new ErrorResponseDTO(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
 	}
 

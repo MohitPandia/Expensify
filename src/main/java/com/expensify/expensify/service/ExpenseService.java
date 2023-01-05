@@ -23,4 +23,6 @@ public interface ExpenseService {
 	ExpenseDTO expenseToExpenseDTO(Expense expense);
 
 	List<ExpenseDTO> findAllExpenseOfUser(Long userid);
+
+	List<ExpenseDTO> getUserfrdExpense(Long userid, Long frdid);
 }
